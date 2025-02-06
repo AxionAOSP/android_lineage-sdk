@@ -99,6 +99,10 @@ public class NetworkTraffic extends TextView {
     private int mIconTint = Color.WHITE;
     private Drawable mDrawable;
 
+    private final ConnectivityManager mConnectivityManager;
+    private final ConnectivityManager.NetworkCallback mNetworkCallback;
+    private final ConnectivityManager.NetworkCallback mDefaultNetworkCallback;
+
     private final HashMap<Network, LinkProperties> mLinkPropertiesMap = new HashMap<>();
     // Used to indicate that the set of sources contributing
     // to current stats have changed.
@@ -292,33 +296,28 @@ public class NetworkTraffic extends TextView {
             }
         };
         mObserver = new SettingsObserver(mTrafficHandler);
+        
+        mConnectivityManager = context.getSystemService(ConnectivityManager.class);
+        
+        mNetworkCallback = new ConnectivityManager.NetworkCallback() {
+            @Override
+            public void onLinkPropertiesChanged(Network network, LinkProperties linkProperties) {
+                Message msg = new Message();
+                msg.what = MESSAGE_TYPE_ADD_NETWORK;
+                msg.obj = new LinkPropertiesHolder(network, linkProperties);
+                mTrafficHandler.sendMessage(msg);
+            }
 
-        // Network tracking related variables
-        final NetworkRequest request = new NetworkRequest.Builder()
-                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                .addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
-                .build();
-        ConnectivityManager.NetworkCallback networkCallback =
-                new ConnectivityManager.NetworkCallback() {
-                    @Override
-                    public void onLinkPropertiesChanged(Network network,
-                            LinkProperties linkProperties) {
-                        Message msg = new Message();
-                        msg.what = MESSAGE_TYPE_ADD_NETWORK;
-                        msg.obj = new LinkPropertiesHolder(network, linkProperties);
-                        mTrafficHandler.sendMessage(msg);
-                    }
+            @Override
+            public void onLost(Network network) {
+                Message msg = new Message();
+                msg.what = MESSAGE_TYPE_REMOVE_NETWORK;
+                msg.obj = network;
+                mTrafficHandler.sendMessage(msg);
+            }
+        };
 
-                    @Override
-                    public void onLost(Network network) {
-                        Message msg = new Message();
-                        msg.what = MESSAGE_TYPE_REMOVE_NETWORK;
-                        msg.obj = network;
-                        mTrafficHandler.sendMessage(msg);
-                    }
-                };
-        ConnectivityManager.NetworkCallback defaultNetworkCallback =
-                new ConnectivityManager.NetworkCallback() {
+        mDefaultNetworkCallback = new ConnectivityManager.NetworkCallback() {
             @Override
             public void onAvailable(Network network) {
                 updateViewState();
@@ -329,10 +328,6 @@ public class NetworkTraffic extends TextView {
                 updateViewState();
             }
         };
-        context.getSystemService(ConnectivityManager.class)
-                .registerNetworkCallback(request, networkCallback);
-        context.getSystemService(ConnectivityManager.class)
-                .registerDefaultNetworkCallback(defaultNetworkCallback);
     }
 
     public void setViewPosition(int vpos) {
@@ -364,6 +359,14 @@ public class NetworkTraffic extends TextView {
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
 
+        final NetworkRequest request = new NetworkRequest.Builder()
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
+                .build();
+
+        mConnectivityManager.registerNetworkCallback(request, mNetworkCallback);
+        mConnectivityManager.registerDefaultNetworkCallback(mDefaultNetworkCallback);
+
         LineageStatusBarItem.Manager manager =
                 LineageStatusBarItem.findManager((View) this);
         manager.addDarkReceiver(mDarkReceiver);
@@ -377,6 +380,10 @@ public class NetworkTraffic extends TextView {
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         mObserver.unobserve();
+        if (mConnectivityManager != null) {
+            mConnectivityManager.unregisterNetworkCallback(mNetworkCallback);
+            mConnectivityManager.unregisterNetworkCallback(mDefaultNetworkCallback);
+        }
     }
 
     class SettingsObserver extends ContentObserver {
