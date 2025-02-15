@@ -78,8 +78,7 @@ public class NetworkTraffic extends TextView {
     private static final long AUTOHIDE_THRESHOLD_KILOBYTES = 8;
     private static final long AUTOHIDE_THRESHOLD_MEGABYTES = 80;
 
-    private final int mTextSizeSingle;
-    private final int mTextSizeMulti;
+    private final int mTextSize;
     private final Handler mTrafficHandler;
     private final SettingsObserver mObserver;
 
@@ -121,8 +120,7 @@ public class NetworkTraffic extends TextView {
         super(context, attrs, defStyle);
 
         final Resources resources = getResources();
-        mTextSizeSingle = resources.getDimensionPixelSize(R.dimen.net_traffic_single_text_size);
-        mTextSizeMulti = resources.getDimensionPixelSize(R.dimen.net_traffic_multi_text_size);
+        mTextSize = resources.getDimensionPixelSize(R.dimen.net_traffic_multi_text_size);
 
         mNetworkTrafficIsVisible = false;
 
@@ -212,27 +210,37 @@ public class NetworkTraffic extends TextView {
                 } else {
                     // Get information for uplink ready so the line return can be added
                     StringBuilder output = new StringBuilder();
-                    if (showUpstream) {
-                        output.append(formatOutput(mTxKbps));
-                    }
-
-                    // Ensure text size is where it needs to be
-                    int textSize;
-                    if (showUpstream && showDownstream) {
-                        output.append("\n");
-                        textSize = mTextSizeMulti;
+                    if ((showUpstream && !showDownstream) || (showDownstream && !showUpstream)) {
+                        String formatted;
+                        if (showUpstream) {
+                            formatted = formatOutput(mTxKbps);
+                        } else {
+                            formatted = formatOutput(mRxKbps);
+                        }
+                        int spaceIndex = formatted.indexOf(' ');
+                        if (spaceIndex != -1) {
+                            formatted = formatted.substring(0, spaceIndex) + "\n" + formatted.substring(spaceIndex + 1);
+                        }
+                        output.append(formatted);
                     } else {
-                        textSize = mTextSizeSingle;
-                    }
-
-                    // Add information for downlink if it's called for
-                    if (showDownstream) {
-                        output.append(formatOutput(mRxKbps));
+                        if (showUpstream) {
+                            output.append(formatOutput(mTxKbps));
+                        }
+                        
+                        // Ensure text size is where it needs to be
+                        if (showUpstream && showDownstream) {
+                            output.append("\n");
+                        }
+                        
+                        // Add information for downlink if it's called for
+                        if (showDownstream) {
+                            output.append(formatOutput(mRxKbps));
+                        }
                     }
 
                     // Update view if there's anything new to show
                     if (!output.toString().contentEquals(getText())) {
-                        setTextSize(TypedValue.COMPLEX_UNIT_PX, (float) textSize);
+                        setTextSize(TypedValue.COMPLEX_UNIT_PX, (float) mTextSize);
                         setText(output.toString());
                     }
                     setVisibility(VISIBLE);
@@ -374,7 +382,6 @@ public class NetworkTraffic extends TextView {
         public void onDarkChanged(ArrayList<Rect> areas, float darkIntensity, int tint) {
             mIconTint = tint;
             setTextColor(mIconTint);
-            updateTrafficDrawableColor();
         }
         public void setFillColors(int darkColor, int lightColor) {
         }
@@ -494,26 +501,8 @@ public class NetworkTraffic extends TextView {
     }
 
     private void updateTrafficDrawable() {
-        final int drawableResId;
-        if (mMode == MODE_UPSTREAM_AND_DOWNSTREAM) {
-            drawableResId = R.drawable.stat_sys_network_traffic_updown;
-        } else if (mMode == MODE_UPSTREAM_ONLY) {
-            drawableResId = R.drawable.stat_sys_network_traffic_up;
-        } else if (mMode == MODE_DOWNSTREAM_ONLY) {
-            drawableResId = R.drawable.stat_sys_network_traffic_down;
-        } else {
-            drawableResId = 0;
-        }
-        mDrawable = drawableResId != 0 ? getResources().getDrawable(drawableResId) : null;
-        setCompoundDrawablesWithIntrinsicBounds(null, null, mDrawable, null);
-        updateTrafficDrawableColor();
-    }
-
-    private void updateTrafficDrawableColor() {
-        if (mDrawable != null) {
-            mDrawable.setColorFilter(
-                    new PorterDuffColorFilter(mIconTint, PorterDuff.Mode.MULTIPLY));
-        }
+        mDrawable = null;
+        setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);
     }
 
     private static class LinkPropertiesHolder {
