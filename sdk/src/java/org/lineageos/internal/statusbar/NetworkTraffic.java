@@ -13,6 +13,7 @@ import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.LinkProperties;
@@ -121,6 +122,10 @@ public class NetworkTraffic extends TextView {
 
         final Resources resources = getResources();
         mTextSize = resources.getDimensionPixelSize(R.dimen.net_traffic_multi_text_size);
+        
+        int fontFamilyId = resources.getIdentifier("config_bodyFontFamily", "string", "android");
+        setTypeface(Typeface.create(resources.getString(fontFamilyId), Typeface.BOLD));
+        setLineSpacing(0.80f, 0.80f);
 
         mNetworkTrafficIsVisible = false;
 
