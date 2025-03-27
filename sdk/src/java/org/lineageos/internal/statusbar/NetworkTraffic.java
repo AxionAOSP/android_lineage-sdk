@@ -123,9 +123,9 @@ public class NetworkTraffic extends TextView {
 
         final Resources resources = getResources();
         mTextSize = resources.getDimensionPixelSize(R.dimen.net_traffic_multi_text_size);
-        
-        int fontFamilyId = resources.getIdentifier("config_bodyFontFamily", "string", "android");
-        setTypeface(Typeface.create(resources.getString(fontFamilyId), Typeface.BOLD));
+
+        String defaultFamily = resources.getString(com.android.internal.R.string.config_bodyFontFamily);
+        setTypeface(Typeface.create(defaultFamily, Typeface.BOLD));
         setLineSpacing(0.80f, 0.80f);
 
         mNetworkTrafficIsVisible = false;
