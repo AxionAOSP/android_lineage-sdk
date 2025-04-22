@@ -22,6 +22,7 @@ import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
 import android.net.TrafficStats;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.os.SystemClock;
 import android.os.UserHandle;
@@ -37,6 +38,7 @@ import org.lineageos.platform.internal.R;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.stream.Stream;
 
 public class NetworkTraffic extends TextView {
@@ -130,7 +132,7 @@ public class NetworkTraffic extends TextView {
         mNetworkTrafficIsVisible = false;
 
         mConnectivityManager = mContext.getSystemService(ConnectivityManager.class);
-        mTrafficHandler = new Handler(mContext.getMainLooper()) {
+        mTrafficHandler = new Handler(Looper.getMainLooper()) {
             @Override
             public void handleMessage(Message msg) {
                 switch (msg.what) {
@@ -167,10 +169,15 @@ public class NetworkTraffic extends TextView {
                 long rxBytes = 0;
                 // Add interface stats, including stats from Clat's IPv4 interface
                 // (for applicable IPv6 networks). Stats are 0 if it doesn't exist.
-                final String[] ifaces = mLinkPropertiesMap.values().stream()
-                        .map(link -> link.getInterfaceName()).filter(iface -> iface != null)
-                        .flatMap(iface -> Stream.of(iface, CLAT_PREFIX + iface))
-                        .toArray(String[]::new);
+                List<String> ifacesList = new ArrayList<>();
+                for (LinkProperties linkProps : mLinkPropertiesMap.values()) {
+                    String iface = linkProps.getInterfaceName();
+                    if (iface != null) {
+                        ifacesList.add(iface);
+                        ifacesList.add(CLAT_PREFIX + iface);
+                    }
+                }
+                String[] ifaces = ifacesList.toArray(new String[0]);
                 for (String iface : ifaces) {
                     final long ifaceTxBytes = TrafficStats.getTxBytes(iface);
                     final long ifaceRxBytes = TrafficStats.getRxBytes(iface);
@@ -424,6 +431,7 @@ public class NetworkTraffic extends TextView {
         super.onDetachedFromWindow();
         mObserver.unobserve();
         unregisterNetworkCallbacks();
+        mTrafficHandler.removeCallbacksAndMessages(null);
     }
 
     class SettingsObserver extends ContentObserver {
