@@ -280,29 +280,52 @@ public class NetworkTraffic extends TextView {
                         unitid = R.string.megabitspersecond_short;
                         break;
                     case UNITS_KILOBYTES:
-                    case UNITS_AUTOBYTES:
-                        if (kbps < 8000 || mUnits == UNITS_KILOBYTES) {
-                            value = String.format("%.0f", (float) kbps / 8 );
-                            unitid = mShowUnits == SHOW_UNITS_COMPACT
-                                ? R.string.kilobytespersecond_compact
-                                : R.string.kilobytespersecond_short;
-                            break;
-                        }
+                        value = String.format("%.0f", (float) kbps / 8);
+                        unitid = mShowUnits == SHOW_UNITS_COMPACT
+                            ? R.string.kilobytespersecond_compact
+                            : R.string.kilobytespersecond_short;
+                        break;
                     case UNITS_MEGABYTES:
                         {
+                            final float mbps = (float) kbps / 8000;
                             final String format;
-                            if (kbps < 80000) {
+                            if (mbps < 10) {
                                 format = "%.2f";
-                            } else if (kbps < 800000) {
+                            } else if (mbps < 100) {
                                 format = "%.1f";
                             } else {
                                 format = "%.0f";
                             }
-                            value = String.format(format, (float) kbps / 8000 );
+                            value = String.format(format, mbps);
+                            unitid = mShowUnits == SHOW_UNITS_COMPACT
+                                ? R.string.megabytespersecond_compact
+                                : R.string.megabytespersecond_short;
                         }
-                        unitid = mShowUnits == SHOW_UNITS_COMPACT
-                            ? R.string.megabytespersecond_compact
-                            : R.string.megabytespersecond_short;
+                        break;
+                    case UNITS_AUTOBYTES:
+                        {
+                            final float kb = (float) kbps / 8;
+                            if (kb < 1024) {
+                                value = String.format("%.0f", kb);
+                                unitid = mShowUnits == SHOW_UNITS_COMPACT
+                                    ? R.string.kilobytespersecond_compact
+                                    : R.string.kilobytespersecond_short;
+                            } else {
+                                final float mb = kb / 1024f;
+                                final String format;
+                                if (mb < 10) {
+                                    format = "%.2f";
+                                } else if (mb < 100) {
+                                    format = "%.1f";
+                                } else {
+                                    format = "%.0f";
+                                }
+                                value = String.format(format, mb);
+                                unitid = mShowUnits == SHOW_UNITS_COMPACT
+                                    ? R.string.megabytespersecond_compact
+                                    : R.string.megabytespersecond_short;
+                            }
+                        }
                         break;
                     default:
                         value = "unknown";
