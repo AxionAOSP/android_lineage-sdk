@@ -1251,7 +1251,7 @@ public final class LineageSettings {
         public static final String KEY_SHAKE_GESTURE_ACTION = "shake_gestures_action";
         /** @hide */
         public static final Validator KEY_SHAKE_GESTURE_ACTION_VALIDATOR =
-                new InclusiveIntegerRangeValidator(0, 17);
+                sHardwareKeyActionvalidator;
 
         /**
          * Action to perform when three fingers swipe action is detected. (Default is 0)
@@ -1261,7 +1261,7 @@ public final class LineageSettings {
 
         /** @hide */
         public static final Validator KEY_THREE_FINGERS_SWIPE_ACTION_VALIDATOR =
-                new InclusiveIntegerRangeValidator(0, 17);
+                sHardwareKeyActionvalidator;
 
         /**
          * Whether to wake the screen with the home key, the value is boolean.
