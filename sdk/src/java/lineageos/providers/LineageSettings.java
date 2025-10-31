@@ -1353,6 +1353,16 @@ public final class LineageSettings {
                 new InclusiveIntegerRangeValidator(0, 3600);
 
         /**
+         * Turn off torch by short-pressing the power button when the screen is off.
+         * The value is boolean (1 or 0).
+         */
+        public static final String TORCH_POWER_BUTTON_TURN_OFF =
+                "torch_power_button_turn_off";
+
+        /** @hide */
+        public static final Validator TORCH_POWER_BUTTON_TURN_OFF_VALIDATOR = sBooleanValidator;
+
+        /**
          * Whether the button backlight is only lit when pressed (and not when screen is touched)
          * The value is boolean (1 or 0).
          */
@@ -2182,6 +2192,8 @@ public final class LineageSettings {
                     TORCH_LONG_PRESS_POWER_GESTURE_VALIDATOR);
             VALIDATORS.put(TORCH_LONG_PRESS_POWER_TIMEOUT,
                     TORCH_LONG_PRESS_POWER_TIMEOUT_VALIDATOR);
+            VALIDATORS.put(TORCH_POWER_BUTTON_TURN_OFF,
+                    TORCH_POWER_BUTTON_TURN_OFF_VALIDATOR);
             VALIDATORS.put(BUTTON_BACKLIGHT_ONLY_WHEN_PRESSED,
                     BUTTON_BACKLIGHT_ONLY_WHEN_PRESSED_VALIDATOR);
             VALIDATORS.put(CHARGING_CONTROL_ENABLED, CHARGING_CONTROL_ENABLED_VALIDATOR);
