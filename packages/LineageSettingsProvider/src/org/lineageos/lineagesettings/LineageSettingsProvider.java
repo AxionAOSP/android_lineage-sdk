@@ -25,6 +25,7 @@ import android.net.Uri;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.SystemProperties;
+import android.os.Process;
 import android.os.UserHandle;
 import android.os.UserManager;
 import android.provider.Settings;
@@ -90,6 +91,8 @@ public class LineageSettingsProvider extends ContentProvider {
     @Override
     public boolean onCreate() {
         if (LOCAL_LOGV) Log.d(TAG, "Creating LineageSettingsProvider");
+        
+        Process.setThreadAffinity(Process.myPid(), 1);
 
         mUserManager = UserManager.get(getContext());
 
