@@ -12,6 +12,7 @@ import android.database.ContentObserver;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.UserHandle;
+import android.provider.Settings;
 
 import lineageos.providers.LineageSettings;
 
@@ -46,6 +47,10 @@ public class LongScreen {
     }
 
     public boolean shouldForceLongScreen(String packageName) {
+        if (Settings.Secure.getIntForUser(mContext.getContentResolver(), 
+                "ax_pc_mode", 0, UserHandle.USER_CURRENT) == 1) {
+            return true;
+        }
         return isSupported() && mApps.contains(packageName);
     }
 
